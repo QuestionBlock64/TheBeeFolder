@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Bee Folder</title>
+    <!-- Favicon using folder.png from the repository -->
+    <link rel="icon" type="image/png" href="folder.png">
+    <style>
+        :root {
+            --bg-color: #fcecf4;
+            --header-pink: #ffb6c1;
+            --accent-pink: #ff69b4;
+            --text-dark: #4a4a4a;
+            --dark-purple: #4a235a;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('Background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-dark);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gallery-menu {
+            background-color: var(--bg-color);
+            width: 80%;
+            height: 80%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .menu-header {
+            padding: 15px 20px;
+            font-weight: bold;
+            color: var(--dark-purple);
+            border-bottom: 2px solid var(--header-pink);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .grid-container {
+            padding: 30px 30px 150px 30px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            row-gap: 150px;
+            column-gap: 35px;
+            overflow-y: auto;
+            flex-grow: 1;
+            min-height: 0; 
+            align-content: start; 
+        }
+
+        .grid-item {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            aspect-ratio: 16/9;
+            width: 100%;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .grid-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        #image-viewer {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('BeeDoodleBackground.png');
+            background-size: cover;
+            background-position: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .main-image-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: transparent;
+            padding: 20px;
+        }
+
+        .main-image-container img {
+            max-width: 90%;
+            max-height: 70vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            object-fit: contain;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .info-bar {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #aaa;
+            text-align: center;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .carousel-container {
+            height: 150px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .carousel-track {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            max-width: 70%;
+            padding: 10px;
+            scrollbar-width: none;
+        }
+        .carousel-track::-webkit-scrollbar { display: none; }
+
+        .thumb {
+            width: 160px;
+            height: 90px;
+            flex-shrink: 0;
+            background-color: #333;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .thumb:hover, .thumb.active { opacity: 1; }
+        .thumb.active { border-color: var(--accent-pink); transform: scale(1.05); }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .arrow {
+            font-size: 40px;
+            color: var(--accent-pink);
+            cursor: pointer;
+            user-select: none;
+            padding: 0 20px;
+        }
+        .arrow:hover { color: #ff99cc; }
+
+        .viewer-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            display: flex;
+            gap: 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .btn-control { cursor: pointer; transition: color 0.2s; }
+        .btn-control:hover { color: var(--header-pink); }
+
+        /* Fullscreen overlay with darkened BeeDoodleBackground */
+        #fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('BeeDoodleBackground.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Dark overlay on top of the background */
+        #fullscreen-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 0;
+        }
+
+        #fullscreen-overlay img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 800px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gallery-menu">
+        <div class="menu-header">
+            <span>Pictures</span>
+            <span style="cursor: default;">&times;</span>
+        </div>
+        <div class="grid-container" id="grid-container">
+        </div>
+    </div>
+
+    <div id="image-viewer">
+        <div class="main-image-container">
+            <img id="main-display-img" src="" alt="Selected Image" style="opacity: 0;">
+        </div>
+        <div class="info-bar" id="info-bar">
+            Loading images from GitHub...
+        </div>
+        
+        <div class="carousel-container">
+            <div class="arrow" onclick="changeImage(-1)">&#9664;</div>
+            <div class="carousel-track" id="carousel-track">
+            </div>
+            <div class="arrow" onclick="changeImage(1)">&#9654;</div>
+            
+            <div class="viewer-controls">
+                <div class="btn-control">Set Wallpaper</div>
+                <div class="btn-control" onclick="closeViewer()">Back</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen overlay -->
+    <div id="fullscreen-overlay">
+        <img id="fullscreen-img" src="" alt="Fullscreen Image">
+    </div>
+
+    <script>
+        const GITHUB_USERNAME = "QuestionBlock64";
+        const REPO_NAME = "The-Bee-Folder";        
+        const FOLDER_NAME = "The Bee Folder";      
+
+        let imageFiles = [];
+        let currentIndex = 0;
+
+        const gridContainer = document.getElementById('grid-container');
+        const galleryMenu = document.getElementById('gallery-menu');
+        const imageViewer = document.getElementById('image-viewer');
+        const mainDisplayImg = document.getElementById('main-display-img');
+        const carouselTrack = document.getElementById('carousel-track');
+        const infoBar = document.getElementById('info-bar');
+        const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+        const fullscreenImg = document.getElementById('fullscreen-img');
+
+        let isFullscreen = false;
+
+        async function fetchImagesFromGitHub() {
+            const encodedFolder = encodeURIComponent(FOLDER_NAME);
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${encodedFolder}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error("Could not read repo.");
+                const files = await response.json();
+                const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+                imageFiles = files
+                    .filter(file => file.type === 'file' && validExtensions.some(ext => file.name.toLowerCase().endsWith(ext)))
+                    .map(file => ({ name: file.name, url: file.download_url }));
+
+                if (imageFiles.length === 0) return;
+                infoBar.innerText = `[ACQUISITION PROCEDURE] Loaded ${imageFiles.length} images.`;
+                buildGallery();
+            } catch (error) {
+                infoBar.innerText = "Error loading images.";
+            }
+        }
+
+        function buildGallery() {
+            gridContainer.innerHTML = '';
+            carouselTrack.innerHTML = '';
+            imageFiles.forEach((file, index) => {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item';
+                gridItem.innerHTML = `<img src="${file.url}" alt="${file.name}" loading="lazy">`;
+                gridItem.onclick = (e) => openViewer(index, e);
+                gridContainer.appendChild(gridItem);
+
+                const thumb = document.createElement('div');
+                thumb.className = 'thumb';
+                thumb.id = `thumb-${index}`;
+                thumb.innerHTML = `<img src="${file.url}" alt="Thumb ${index}" loading="lazy">`;
+                thumb.onclick = () => setImage(index);
+                carouselTrack.appendChild(thumb);
+            });
+        }
+
+        function openViewer(index, event) {
+            if (isFullscreen) return;
+            const clickedItem = event.currentTarget;
+            const startRect = clickedItem.getBoundingClientRect();
+            const imageUrl = imageFiles[index].url;
+
+            mainDisplayImg.src = imageUrl;
+            mainDisplayImg.style.opacity = '0';
+
+            function startAnimation() {
+                imageViewer.style.display = 'flex';
+                galleryMenu.style.display = 'none';
+                imageViewer.offsetHeight;
+                const targetRect = mainDisplayImg.getBoundingClientRect();
+
+                const clone = clickedItem.cloneNode(true);
+                clone.style.position = 'fixed';
+                clone.style.top = startRect.top + 'px';
+                clone.style.left = startRect.left + 'px';
+                clone.style.width = startRect.width + 'px';
+                clone.style.height = startRect.height + 'px';
+                clone.style.zIndex = '1001';
+                clone.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                clone.style.pointerEvents = 'none';
+                clone.style.margin = '0';
+                const cloneImg = clone.querySelector('img');
+                if (cloneImg) {
+                    cloneImg.style.width = '100%';
+                    cloneImg.style.height = '100%';
+                    cloneImg.style.objectFit = 'cover';
+                }
+                document.body.appendChild(clone);
+
+                clone.offsetHeight;
+
+                clone.style.top = targetRect.top + 'px';
+                clone.style.left = targetRect.left + 'px';
+                clone.style.width = targetRect.width + 'px';
+                clone.style.height = targetRect.height + 'px';
+                clone.style.borderRadius = '0';
+
+                setTimeout(() => {
+                    clone.remove();
+                    mainDisplayImg.style.opacity = '1';
+                }, 400);
+
+                setImage(index);
+            }
+
+            if (mainDisplayImg.complete && mainDisplayImg.naturalWidth !== 0) {
+                startAnimation();
+            } else {
+                mainDisplayImg.onload = startAnimation;
+            }
+        }
+
+        function closeViewer() {
+            if (isFullscreen) return;
+            const targetGridItem = gridContainer.children[currentIndex];
+            if (!targetGridItem) {
+                imageViewer.style.display = 'none';
+                galleryMenu.style.display = 'flex';
+                return;
+            }
+
+            galleryMenu.style.display = 'flex';
+            targetGridItem.scrollIntoView({ behavior: 'instant', block: 'center' });
+
+            requestAnimationFrame(() => {
+                const startRect = mainDisplayImg.getBoundingClientRect();
+                const targetRect = targetGridItem.getBoundingClientRect();
+
+                const clone = document.createElement('img');
+                clone.src = mainDisplayImg.src;
+                clone.style.position = 'fixed';
+                clone.style.top = startRect.top + 'px';
+                clone.style.left = startRect.left + 'px';
+                clone.style.width = startRect.width + 'px';
+                clone.style.height = startRect.height + 'px';
+                clone.style.zIndex = '1001';
+                clone.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                clone.style.pointerEvents = 'none';
+                clone.style.objectFit = 'contain';
+                clone.style.boxShadow = '0 0 20px rgba(0,0,0,0.8)';
+                clone.style.borderRadius = '0';
+                document.body.appendChild(clone);
+
+                mainDisplayImg.style.opacity = '0';
+
+                clone.offsetHeight;
+
+                clone.style.top = targetRect.top + 'px';
+                clone.style.left = targetRect.left + 'px';
+                clone.style.width = targetRect.width + 'px';
+                clone.style.height = targetRect.height + 'px';
+                clone.style.objectFit = 'cover';
+                clone.style.boxShadow = 'none';
+                clone.style.borderRadius = '5px';
+
+                setTimeout(() => {
+                    clone.remove();
+                    imageViewer.style.display = 'none';
+                    mainDisplayImg.style.opacity = '0';
+                }, 400);
+            });
+        }
+
+        function setImage(index) {
+            currentIndex = index;
+            const file = imageFiles[index];
+            mainDisplayImg.src = file.url;
+            infoBar.innerText = `[VIEWING] ${file.name}`;
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            const activeThumb = document.getElementById(`thumb-${index}`);
+            if(activeThumb) {
+                activeThumb.classList.add('active');
+                activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        }
+
+        function changeImage(direction) {
+            if (imageFiles.length === 0 || isFullscreen) return;
+            let newIndex = currentIndex + direction;
+            if (newIndex < 0) newIndex = imageFiles.length - 1;
+            if (newIndex >= imageFiles.length) newIndex = 0;
+            setImage(newIndex);
+        }
+
+        // Fullscreen logic
+        function enterFullscreen() {
+            if (isFullscreen) return;
+            const startRect = mainDisplayImg.getBoundingClientRect();
+
+            const clone = document.createElement('img');
+            clone.src = mainDisplayImg.src;
+            clone.style.position = 'fixed';
+            clone.style.top = startRect.top + 'px';
+            clone.style.left = startRect.left + 'px';
+            clone.style.width = startRect.width + 'px';
+            clone.style.height = startRect.height + 'px';
+            clone.style.zIndex = '2001';
+            clone.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            clone.style.pointerEvents = 'none';
+            clone.style.objectFit = 'contain';
+            clone.style.boxShadow = '0 0 20px rgba(0,0,0,0.8)';
+            clone.style.borderRadius = '0';
+            document.body.appendChild(clone);
+
+            clone.offsetHeight;
+
+            clone.style.top = '0';
+            clone.style.left = '0';
+            clone.style.width = '100vw';
+            clone.style.height = '100vh';
+            clone.style.boxShadow = 'none';
+
+            fullscreenImg.src = mainDisplayImg.src;
+            fullscreenOverlay.style.display = 'flex';
+            fullscreenImg.style.opacity = '0';
+
+            setTimeout(() => {
+                clone.remove();
+                fullscreenImg.style.opacity = '1';
+                isFullscreen = true;
+            }, 400);
+        }
+
+        function exitFullscreen() {
+            if (!isFullscreen) return;
+            const startRect = fullscreenImg.getBoundingClientRect();
+            const targetRect = mainDisplayImg.getBoundingClientRect();
+
+            const clone = document.createElement('img');
+            clone.src = fullscreenImg.src;
+            clone.style.position = 'fixed';
+            clone.style.top = startRect.top + 'px';
+            clone.style.left = startRect.left + 'px';
+            clone.style.width = startRect.width + 'px';
+            clone.style.height = startRect.height + 'px';
+            clone.style.zIndex = '2001';
+            clone.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            clone.style.pointerEvents = 'none';
+            clone.style.objectFit = 'contain';
+            clone.style.boxShadow = 'none';
+            clone.style.borderRadius = '0';
+            document.body.appendChild(clone);
+
+            fullscreenImg.style.opacity = '0';
+
+            clone.offsetHeight;
+
+            clone.style.top = targetRect.top + 'px';
+            clone.style.left = targetRect.left + 'px';
+            clone.style.width = targetRect.width + 'px';
+            clone.style.height = targetRect.height + 'px';
+            clone.style.boxShadow = '0 0 20px rgba(0,0,0,0.8)';
+
+            setTimeout(() => {
+                clone.remove();
+                fullscreenOverlay.style.display = 'none';
+                fullscreenImg.style.opacity = '1';
+                isFullscreen = false;
+                mainDisplayImg.style.opacity = '1';
+            }, 400);
+        }
+
+        mainDisplayImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isFullscreen) return;
+            if (imageFiles.length === 0) return;
+            enterFullscreen();
+        });
+
+        fullscreenImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exitFullscreen();
+        });
+
+        fullscreenOverlay.addEventListener('click', (e) => {
+            if (e.target === fullscreenOverlay) {
+                exitFullscreen();
+            }
+        });
+
+        fetchImagesFromGitHub();
+    </script>
+</body>
+</html>
