@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Bee Folder</title>
-    <!-- Favicon using folder.png from the repository -->
     <link rel="icon" type="image/png" href="folder.png">
     <style>
         :root {
@@ -15,6 +14,56 @@
             --dark-purple: #4a235a;
         }
 
+        /* Rotation lock overlay */
+        #rotation-lock {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--dark-purple);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        #rotation-lock.active {
+            display: flex;
+        }
+
+        #rotation-lock .rotate-icon {
+            font-size: 60px;
+            animation: rotatePhone 2s ease-in-out infinite;
+            margin-bottom: 25px;
+            display: inline-block;
+        }
+
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            75% { transform: rotate(90deg); }
+        }
+
+        #rotation-lock h2 {
+            color: var(--header-pink);
+            font-size: 22px;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+
+        #rotation-lock p {
+            color: #ccc;
+            font-size: 15px;
+            margin: 0;
+            line-height: 1.5;
+            max-width: 280px;
+        }
+
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,12 +71,44 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            /* iOS fix: ensure the background covers the whole viewport */
+            background-attachment: scroll;
+            -webkit-background-size: cover;
             color: var(--text-dark);
             height: 100vh;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* Music credit popup – hidden by default */
+        #music-credit {
+            position: fixed;
+            top: 15px;
+            left: -350px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 0 8px 8px 0;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            z-index: 3000;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+        }
+
+        #music-credit.show-credit {
+            animation: slideInOut 6s ease-in-out forwards;
+        }
+
+        @keyframes slideInOut {
+            0%   { left: -350px; opacity: 0; }
+            8%   { left: 0; opacity: 1; }
+            92%  { left: 0; opacity: 1; }
+            100% { left: -350px; opacity: 0; }
         }
 
         #gallery-menu {
@@ -49,6 +130,7 @@
             border-bottom: 2px solid var(--header-pink);
             display: flex;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .grid-container {
@@ -93,6 +175,10 @@
             background-image: url('BeeDoodleBackground.png');
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
+            /* iOS background fix */
+            background-attachment: scroll;
+            -webkit-background-size: cover;
             flex-direction: column;
             z-index: 100;
         }
@@ -123,6 +209,7 @@
             padding: 10px;
             font-family: monospace;
             font-size: 14px;
+            flex-shrink: 0;
         }
 
         .carousel-container {
@@ -133,6 +220,7 @@
             justify-content: center;
             padding: 0 20px;
             position: relative;
+            flex-shrink: 0;
         }
 
         .carousel-track {
@@ -182,7 +270,6 @@
         .btn-control { cursor: pointer; transition: color 0.2s; }
         .btn-control:hover { color: var(--header-pink); }
 
-        /* Fullscreen overlay with darkened BeeDoodleBackground */
         #fullscreen-overlay {
             display: none;
             position: fixed;
@@ -193,12 +280,15 @@
             background-image: url('BeeDoodleBackground.png');
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
+            /* iOS background fix */
+            background-attachment: scroll;
+            -webkit-background-size: cover;
             z-index: 2000;
             justify-content: center;
             align-items: center;
         }
 
-        /* Dark overlay on top of the background */
         #fullscreen-overlay::before {
             content: '';
             position: absolute;
@@ -220,19 +310,147 @@
             z-index: 1;
         }
 
-        @media (max-width: 1200px) {
-            .grid-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
+        /* Mobile styles */
+        body.is-mobile #gallery-menu {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
         }
-        @media (max-width: 800px) {
-            .grid-container {
+
+        body.is-mobile .menu-header {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        body.is-mobile .grid-container {
+            grid-template-columns: repeat(3, 1fr);
+            row-gap: 150px;
+            column-gap: 8px;
+            padding: 8px 8px 80px 8px;
+        }
+
+        body.is-mobile .grid-item {
+            border-radius: 3px;
+            aspect-ratio: 16/9;
+        }
+
+        body.is-mobile .grid-item:hover {
+            transform: scale(1.02);
+        }
+
+        body.is-mobile #image-viewer .main-image-container {
+            padding: 5px;
+        }
+
+        body.is-mobile .main-image-container img {
+            max-height: 50vh;
+            max-width: 85%;
+        }
+
+        body.is-mobile .info-bar {
+            padding: 5px;
+            font-size: 10px;
+        }
+
+        body.is-mobile .carousel-container {
+            height: 70px;
+            padding: 0 5px;
+        }
+
+        body.is-mobile .carousel-track {
+            max-width: 82%;
+            gap: 5px;
+            padding: 4px;
+        }
+
+        body.is-mobile .thumb {
+            width: 75px;
+            height: 42px;
+            border-width: 1px;
+        }
+
+        body.is-mobile .arrow {
+            font-size: 22px;
+            padding: 0 5px;
+        }
+
+        body.is-mobile .viewer-controls {
+            bottom: 6px;
+            right: 10px;
+            font-size: 12px;
+            gap: 6px;
+        }
+
+        body.is-mobile #music-credit {
+            top: 5px;
+            font-size: 11px;
+            padding: 5px 12px;
+        }
+
+        @media (max-width: 700px) {
+            body.is-mobile .grid-container {
                 grid-template-columns: repeat(2, 1fr);
+                row-gap: 150px;
+                column-gap: 6px;
+                padding: 6px 6px 60px 6px;
+            }
+
+            body.is-mobile .thumb {
+                width: 55px;
+                height: 32px;
+            }
+
+            body.is-mobile .carousel-container {
+                height: 55px;
+            }
+
+            body.is-mobile .arrow {
+                font-size: 18px;
+                padding: 0 3px;
+            }
+
+            body.is-mobile .carousel-track {
+                max-width: 85%;
+                gap: 3px;
+            }
+
+            body.is-mobile .main-image-container img {
+                max-height: 40vh;
+            }
+
+            body.is-mobile .menu-header {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            body.is-mobile .info-bar {
+                padding: 3px;
+                font-size: 9px;
+            }
+
+            body.is-mobile .viewer-controls {
+                bottom: 4px;
+                right: 6px;
+                font-size: 10px;
+                gap: 4px;
             }
         }
     </style>
 </head>
 <body>
+
+    <div id="rotation-lock">
+        <div class="rotate-icon">📱</div>
+        <h2>Please Rotate Your Phone</h2>
+        <p>This site is best viewed in landscape mode. Turn your phone sideways to continue.</p>
+    </div>
+
+    <div id="music-credit">♪ Music by MakenCat</div>
+
+    <audio id="bg-music" loop preload="auto">
+        <source src="BackgroundMusic.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 
     <div id="gallery-menu">
         <div class="menu-header">
@@ -258,22 +476,149 @@
             <div class="arrow" onclick="changeImage(1)">&#9654;</div>
             
             <div class="viewer-controls">
-                <div class="btn-control">Set Wallpaper</div>
                 <div class="btn-control" onclick="closeViewer()">Back</div>
             </div>
         </div>
     </div>
 
-    <!-- Fullscreen overlay -->
     <div id="fullscreen-overlay">
         <img id="fullscreen-img" src="" alt="Fullscreen Image">
     </div>
 
     <script>
-        const GITHUB_USERNAME = "QuestionBlock64";
-        const REPO_NAME = "The-Bee-Folder";        
-        const FOLDER_NAME = "The Bee Folder";      
+        // ---------- MOBILE DETECTION ----------
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const mobileRegex = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
+            const hasTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const isSmallScreen = window.innerWidth <= 1024;
+            return mobileRegex.test(userAgent) || (hasTouchScreen && isSmallScreen);
+        }
 
+        if (isMobileDevice()) {
+            document.body.classList.add('is-mobile');
+        }
+
+        // ---------- ROTATION LOCK ----------
+        const rotationLock = document.getElementById('rotation-lock');
+        
+        function checkOrientation() {
+            if (!document.body.classList.contains('is-mobile')) {
+                rotationLock.classList.remove('active');
+                return;
+            }
+            
+            const isPortrait = window.innerHeight > window.innerWidth;
+            
+            if (isPortrait) {
+                rotationLock.classList.add('active');
+            } else {
+                rotationLock.classList.remove('active');
+            }
+        }
+        
+        checkOrientation();
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(checkOrientation, 100);
+        });
+
+        // ---------- MUSIC & MEDIA SESSION ----------
+        const bgMusic = document.getElementById('bg-music');
+        const musicCredit = document.getElementById('music-credit');
+
+        function showMusicCredit() {
+            if (!musicCredit.classList.contains('show-credit')) {
+                musicCredit.classList.add('show-credit');
+                setTimeout(() => {
+                    musicCredit.classList.remove('show-credit');
+                }, 6000);
+            }
+        }
+
+        async function updateMediaSessionArtwork() {
+            if (!('mediaSession' in navigator)) return;
+            
+            try {
+                const encodedFolder = encodeURIComponent("The Bee Folder");
+                const apiUrl = `https://api.github.com/repos/QuestionBlock64/The-Bee-Folder/contents/${encodedFolder}`;
+                const response = await fetch(apiUrl);
+                const files = await response.json();
+                
+                const everyoneFile = files.find(file => file.name === 'Everyone.png');
+                if (everyoneFile && everyoneFile.download_url) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: 'Background Music',
+                        artist: 'MakenCat',
+                        album: 'The Bee Folder',
+                        artwork: [
+                            { src: everyoneFile.download_url, sizes: '1024x1024', type: 'image/png' },
+                            { src: everyoneFile.download_url, sizes: '512x512', type: 'image/png' },
+                            { src: everyoneFile.download_url, sizes: '256x256', type: 'image/png' },
+                            { src: everyoneFile.download_url, sizes: '128x128', type: 'image/png' },
+                        ]
+                    });
+                }
+            } catch (error) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'Background Music',
+                    artist: 'MakenCat',
+                    album: 'The Bee Folder',
+                    artwork: [
+                        { src: 'folder.png', sizes: '512x512', type: 'image/png' }
+                    ]
+                });
+            }
+            
+            navigator.mediaSession.playbackState = bgMusic.paused ? 'paused' : 'playing';
+            navigator.mediaSession.setActionHandler('play', () => {
+                bgMusic.play();
+                navigator.mediaSession.playbackState = 'playing';
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
+                bgMusic.pause();
+                navigator.mediaSession.playbackState = 'paused';
+            });
+            navigator.mediaSession.setActionHandler('previoustrack', null);
+            navigator.mediaSession.setActionHandler('nexttrack', null);
+        }
+
+        async function attemptAutoplay() {
+            try {
+                await bgMusic.play();
+                showMusicCredit();
+                updateMediaSessionArtwork();
+            } catch (err) {
+                console.log('Autoplay prevented, waiting for user interaction.');
+            }
+        }
+
+        function handleUserInteraction() {
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    showMusicCredit();
+                    updateMediaSessionArtwork();
+                }).catch(() => {});
+            }
+        }
+
+        document.addEventListener('click', handleUserInteraction, { once: true });
+        document.addEventListener('touchstart', handleUserInteraction, { once: true });
+
+        window.addEventListener('DOMContentLoaded', attemptAutoplay);
+
+        bgMusic.addEventListener('play', () => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'playing';
+            }
+        });
+        bgMusic.addEventListener('pause', () => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'paused';
+            }
+        });
+
+        // ---------- GALLERY LOGIC ----------
         let imageFiles = [];
         let currentIndex = 0;
 
@@ -289,8 +634,8 @@
         let isFullscreen = false;
 
         async function fetchImagesFromGitHub() {
-            const encodedFolder = encodeURIComponent(FOLDER_NAME);
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${encodedFolder}`;
+            const encodedFolder = encodeURIComponent("The Bee Folder");
+            const apiUrl = `https://api.github.com/repos/QuestionBlock64/The-Bee-Folder/contents/${encodedFolder}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -456,7 +801,6 @@
             setImage(newIndex);
         }
 
-        // Fullscreen logic
         function enterFullscreen() {
             if (isFullscreen) return;
             const startRect = mainDisplayImg.getBoundingClientRect();
@@ -533,6 +877,16 @@
                 mainDisplayImg.style.opacity = '1';
             }, 400);
         }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (isFullscreen) {
+                    exitFullscreen();
+                } else if (imageViewer.style.display === 'flex') {
+                    closeViewer();
+                }
+            }
+        });
 
         mainDisplayImg.addEventListener('click', (e) => {
             e.stopPropagation();
